@@ -17,7 +17,9 @@ export default class App extends Component {
             this.createTodoItem('Drink Coffee'),
             this.createTodoItem('Build react app'),
             this.createTodoItem('Make a lunch')
-        ]
+        ],
+        term: '',
+        done: 0
     };
 
     createTodoItem(label) {
@@ -30,7 +32,8 @@ export default class App extends Component {
     }
 
     render () {
-        const { todoData } = this.state;
+        const { todoData, term, done } = this.state;
+        const visibleItems = this.searchItems(todoData, term, done);
         const doneCount = todoData
             .filter((el) => el.done).length;
         const todoCount = todoData.length - doneCount;
@@ -39,18 +42,40 @@ export default class App extends Component {
             <div className="todo-app">
                 <AppHeader toDo={todoCount} done={doneCount} />
                 <div className="top-panel d-flex">
-                    <SearchPanel />
-                    <ItemStatusFilter />
+                    <SearchPanel setTerm={this.setTerm} />
+                    <ItemStatusFilter setFilter={this.setFilter} done={done} />
                 </div>
                 <TodoList
                     onDeleted={this.deleteItem}
                     onToggleImportant={this.onToggleImportant}
                     onToggleDone={this.onToggleDone}
-                    todos={todoData} />
+                    todos={visibleItems} />
                 <ItemAddForm onItemAdded={(text) => this.addItem(text)} />
             </div>
         );
     }
+
+    setTerm = (term) => {
+        this.setState({term})
+    };
+
+    setFilter = (done) => {
+        this.setState({done})
+    };
+
+    searchItems = (items, term, done) => {
+        if(term === '' && done === 0) {
+            return items;
+        }
+
+        if(term !== '')
+            items = items.filter((item) => item.label.toLowerCase().includes(term.toLowerCase()));
+
+        if(done !== 0)
+            items = items.filter((item) => item.done === done);
+
+        return items;
+    };
 
     addItem = (text) => {
         this.setState(({ todoData }) => {
@@ -90,7 +115,7 @@ export default class App extends Component {
             newItem,
             ...arr.slice(idx + 1)
         ];
-    }
+    };
 
     onToggleImportant = (id) => {
         this.setState(({todoData}) => {
